@@ -4,6 +4,7 @@ Script that visualize the browsing history
 
 from _collections import defaultdict
 import datetime
+import math
 import sqlite3
 
 import matplotlib.pyplot as plt
@@ -40,7 +41,7 @@ def extract_history_records():
 
 
 def visualize(history_list, url_mapping):
-  #initialize a graph
+  # initialize a graph
   g = nx.Graph()
 
 #   all_vertices_ID_with_duplicate = [ history[1] for history in history_list] + \
@@ -59,8 +60,8 @@ def visualize(history_list, url_mapping):
     
   
   # add all vertices into the graph
-  #vertices = url_mapping.keys()
-  #for node_id in vertices:
+  # vertices = url_mapping.keys()
+  # for node_id in vertices:
   #  g.add_node(node_id)
   
   for entry in history_list[:1000]:
@@ -68,17 +69,48 @@ def visualize(history_list, url_mapping):
     visit_type = entry[4]
    
     g.add_edge(entry[1], entry[2])
-                #color='red',
-                #visit_date=entry[3],
-                #visit_type=visit_type]
-                
-  nx.draw(g, pos=nx.graphviz_layout(g),
+                # color='red',
+                # visit_date=entry[3],
+                # visit_type=visit_type]
+  
+  
+  labelsMap = {}
+  for n in g.nodes():
+    if g.degree(n) > 5:
+      labelsMap[n] = url_mapping[n]
+    else:
+      labelsMap[n] = ''
+  
+  layout = nx.random_layout(g)
+  nx.draw(g, pos=layout,
           node_size=[10 * g.degree(n) for n in g.nodes()],
           node_color=range(len(g.nodes())),
           cmap=plt.cm.Blues,
-          #with_labels = True,
+          # with_labels = True,
           )
+  #nx.draw_networkx_labels(g, layout, labelsMap, font_size=8, font_color='r')
+  
+  #ax = plt.gca()
+  fig = plt.gcf()
+  # implot = ax.imshow(im)
+  
+  def onclick(event):
+      if event.xdata != None and event.ydata != None:
+          # print(event.xdata, event.ydata)
+          closest = min(layout.keys(), key=lambda x: dist(layout[x][0], layout[x][1], event.xdata, event.ydata))
+          print closest
+          labelsMap = defaultdict(int)
+          labelsMap[closest] = url_mapping[closest]
+          nx.draw_networkx_labels(g, layout, labelsMap, font_size=8, font_color='r')
+          
+          plt.draw()
+          
+  cid = fig.canvas.mpl_connect('button_press_event', onclick)
+  
   plt.show()
+
+def dist(a, b, x, y):
+  return math.sqrt((a - x) * (a - x) + (b - y) * (b - y))
 
 def init():
   history_list, url_mapping = extract_history_records()
