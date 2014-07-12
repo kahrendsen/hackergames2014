@@ -9,6 +9,8 @@ import sqlite3
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import urllib
+import webbrowser
 
 
 placesPath = '../places-ct.sqlite'
@@ -93,6 +95,8 @@ def visualize(history_list, url_mapping):
   #ax = plt.gca()
   fig = plt.gcf()
   # implot = ax.imshow(im)
+
+
   
   def onclick(event):
       if event.xdata != None and event.ydata != None:
@@ -101,9 +105,14 @@ def visualize(history_list, url_mapping):
           print closest
           labelsMap = defaultdict(int)
           labelsMap[closest] = url_mapping[closest]
-          nx.draw_networkx_labels(g, layout, labelsMap, font_size=8, font_color='r')
+          if event.button==1:
+            nx.draw_networkx_labels(g, layout, labelsMap, font_size=8, font_color='r')
+          if event.button==3:
+            webbrowser.open(url_mapping[closest])
           
           plt.draw()
+
+
           
   cid = fig.canvas.mpl_connect('button_press_event', onclick)
   
