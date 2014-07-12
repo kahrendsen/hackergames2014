@@ -20,33 +20,32 @@ def extract_history_records():
   history = c.fetchall()
   
   conn.close()
-  return history	
-
+  return history
 
 def visualize(history_list):
-	#initialize a graph
-	g = nx.Graph()
-	
-	
-	all_vertices_ID_with_duplicate = [ history[1] for history in history_list] + \
-										[ history[2] for history in history_list]
-	
-	max_num_nodes = max(all_vertices_ID_with_duplicate)	
-	
-	all_unique_vertices = set(all_vertices_ID_with_duplicate)
-	#num_nodes = len(all_unique_vertices)
-	
-	#add all vertices into the graph
-	g.add_nodes_from(list(all_unique_vertices))
+  # initialize a graph
+  g = nx.Graph()
 
-	all_edges = [(history[1], history[2]) for history in history_list]
-	g.add_edges_from(all_edges)
-	
-	nx.draw(g)
-	plt.show()
+
+  all_vertices_ID_with_duplicate = [ history[1] for history in history_list] + \
+                    [ history[2] for history in history_list]
+
+  max_num_nodes = max(all_vertices_ID_with_duplicate)
+
+  all_unique_vertices = set(all_vertices_ID_with_duplicate)
+  # num_nodes = len(all_unique_vertices)
+
+  # add all vertices into the graph
+  g.add_nodes_from(list(all_unique_vertices))
+
+  all_edges = [(history[1], history[2]) for history in history_list]
+  g.add_edges_from(all_edges)
+
+  nx.draw(g, with_labels=True)
+  plt.show()
 
 def init():
-	history_list = extract_history_records()
-	visualize(history_list)
+  history_list = extract_history_records()
+  visualize(history_list)
 
 init()
