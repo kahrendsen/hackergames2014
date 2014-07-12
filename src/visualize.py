@@ -3,9 +3,11 @@ Script that visualize the browsing history
 """
 
 from _collections import defaultdict
+import argparse
 import datetime
 import math
 import sqlite3
+import sys
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -34,7 +36,7 @@ def extract_history_records():
   url_mapping_query = """select id, url from moz_places"""
   c.execute(url_mapping_query)
   urls = c.fetchall()
-  url_mapping = dict(urls)  
+  url_mapping = dict(urls)
   url_mapping[0] = 'first_search'
   url_mapping = defaultdict(int, url_mapping)
   conn.close()
@@ -42,7 +44,7 @@ def extract_history_records():
 
 
 
-def visualize(history_list, url_mapping):
+def visualize(history_list, url_mapping, layoutMethod):
   # initialize a graph
   g = nx.Graph()
 
@@ -65,15 +67,27 @@ def visualize(history_list, url_mapping):
   # vertices = url_mapping.keys()
   # for node_id in vertices:
   #  g.add_node(node_id)
+
+  #colorMap = {}
   
   for entry in history_list[:1000]:
     visit_date = datetime.datetime.utcfromtimestamp(entry[3] / 1000000.0)
     visit_type = entry[4]
    
-    g.add_edge(entry[1], entry[2])
+    color = ''
+    if visit_type == 1:
+      color = 'r'
+    elif visit_type == 2:
+      color = 'b'
+    elif visit_type == 3:
+      color = 'g'
+    elif visit_type == 4:
+      color = "black"
+    g.add_edge(entry[1], entry[2], color=color)
                 # color='red',
                 # visit_date=entry[3],
                 # visit_type=visit_type]
+    #colorMap += color
   
   
   labelsMap = {}
@@ -83,16 +97,35 @@ def visualize(history_list, url_mapping):
     else:
       labelsMap[n] = ''
   
-  layout = nx.random_layout(g)
+#   layout = nx.circular_layout(g)
+#   
+#   if layoutMethod == '--circular':
+#     layout = nx.circular_layout(g)
+#   elif layoutMethod == '--shell':
+#     layout = nx.shell_layout(g)
+#     print 'shell'
+#   elif layoutMethod == '--graphviz':
+#     layout = nx.graphviz_layout(g)
+#   elif layoutMethod == '--fruchterman':
+#     layout = nx.fruchterman_reingold_layout(g)
+#   elif layoutMethod == '--random':
+#     layout = nx.random_layout(g)
+#   elif layoutMethod == '--spring':
+#     layout = nx.spring_layout(g)
+#   elif layoutMethod == '--spectral':
+#     layout = nx.spectral_layout(g)
+  
+  layout = layoutMethod(g)
   nx.draw(g, pos=layout,
-          node_size=[10 * g.degree(n) for n in g.nodes()],
+          node_size=[20 * g.degree(n) for n in g.nodes()],
           node_color=range(len(g.nodes())),
+          #edge_color=colorMap,
           cmap=plt.cm.Blues,
           # with_labels = True,
           )
-  #nx.draw_networkx_labels(g, layout, labelsMap, font_size=8, font_color='r')
+  # nx.draw_networkx_labels(g, layout, labelsMap, font_size=8, font_color='r')
   
-  #ax = plt.gca()
+  # ax = plt.gca()
   fig = plt.gcf()
   # implot = ax.imshow(im)
 
@@ -110,6 +143,7 @@ def visualize(history_list, url_mapping):
           if event.button==3:
             webbrowser.open(url_mapping[closest])
           
+          #plt.cla()
           plt.draw()
 
 
@@ -123,5 +157,34 @@ def dist(a, b, x, y):
 
 def init():
   history_list, url_mapping = extract_history_records()
-  visualize(history_list, url_mapping)
+  
+  print sys.argv
+  if len(sys.argv) != 2:
+    print 'needs layout argument'
+    sys.exit(1)
+    
+  layout = sys.argv[1]
+  
+  if layout == '--circular':
+    layout = nx.circular_layout
+  elif layout == '--shell':
+    layout = nx.shell_layout
+    print 'shell'
+  elif layout == '--graphviz':
+    layout = nx.graphviz_layout
+  elif layout == '--fruchterman':
+    layout = nx.fruchterman_reingold_layout
+  elif layout == '--random':
+    layout = nx.random_layout
+  elif layout == '--spring':
+    layout = nx.spring_layout
+  elif layout == '--spectral':
+    layout = nx.spectral_layout
+  else:
+    print 'must specify valid layout'
+    sys.exit(1)
+    
+  #layoutMethod = nx.circular_layout
+  visualize(history_list, url_mapping, layout)
+  
 init()
