@@ -8,7 +8,6 @@ def main():
 	c = conn.cursor()
 	
 	c.execute('select sqlite_version()')
-	print c.fetchall()
 	
 	c.execute("""select * from moz_historyvisits""")
 	
